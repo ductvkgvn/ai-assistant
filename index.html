@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-20px, -20px); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .chat-area {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .message {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .ai-avatar {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+
+        .message-content {
+            flex: 1;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            max-width: 70%;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-style: italic;
+            color: #64748b;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #64748b;
+            animation: bounce 1.4s ease-in-out infinite both;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+            } 40% {
+                transform: scale(1);
+            }
+        }
+
+        .input-area {
+            padding: 30px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .input-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .question-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+            outline: none;
+        }
+
+        .question-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .submit-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .question-counter {
+            text-align: center;
+            margin-top: 15px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .chat-area {
+                padding: 20px;
+            }
+
+            .input-area {
+                padding: 20px;
+            }
+
+            .input-form {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .submit-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Assistant</h1>
+            <p>Hỏi gì cũng được, nhưng đừng mong đợi quá nhiều! 😄</p>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="empty-state">
+                <div class="empty-state-icon">💬</div>
+                <p>Chào bạn! Hãy đặt câu hỏi đầu tiên để bắt đầu cuộc trò chuyện.</p>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <form class="input-form" id="questionForm">
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        class="question-input" 
+                        id="questionInput" 
+                        placeholder="Nhập câu hỏi của bạn..."
+                        required
+                    >
+                </div>
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span>Gửi</span>
+                    <span>→</span>
+                </button>
+            </form>
+            <div class="question-counter" id="questionCounter">
+                Câu hỏi: 0/10
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let questionCount = 0;
+        const maxQuestions = 10;
+        
+        const chatArea = document.getElementById('chatArea');
+        const questionForm = document.getElementById('questionForm');
+        const questionInput = document.getElementById('questionInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const questionCounter = document.getElementById('questionCounter');
+
+        const responses = [
+            "Từ từ, tôi đang suy nghĩ, vui lòng hỏi câu khác...",
+            "Tôi vẫn đang suy nghĩ, bạn hỏi câu khác đi!",
+            "Vui lòng chờ phản hồi sau 1 năm. ^^",
+            "Chúc ngày mới vui vẻ. Just joking! Bạn đã hỏi đủ rồiiii. 🎉",
+        ];
+
+        function updateCounter() {
+            questionCounter.textContent = `Câu hỏi: ${questionCount}/${maxQuestions}`;
+        }
+
+        function addMessage(content, isUser = false, isLoading = false) {
+            const message = document.createElement('div');
+            message.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = `message-avatar ${isUser ? 'user-avatar' : 'ai-avatar'}`;
+            avatar.textContent = isUser ? 'B' : 'AI';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            
+            if (isLoading) {
+                messageContent.innerHTML = `
+                    <div class="loading">
+                        <span>Thinking</span>
+                        <div class="loading-dots">
+                            <div class="loading-dot"></div>
+                            <div class="loading-dot"></div>
+                            <div class="loading-dot"></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                messageContent.textContent = content;
+            }
+            
+            message.appendChild(avatar);
+            message.appendChild(messageContent);
+            
+            // Remove empty state if it exists
+            const emptyState = chatArea.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            chatArea.appendChild(message);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            
+            return messageContent;
+        }
+
+        function getResponse(questionNumber) {
+            if (questionNumber === 1) {
+                return responses[0];
+            } else if (questionNumber === 2) {
+                return responses[1];
+            } else if (questionNumber === 3){
+                return responses[2];
+            } else {
+                return responses[3];
+            }
+        }
+
+        questionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (questionCount >= maxQuestions) {
+                alert('Bạn đã hỏi đủ 10 câu rồi!');
+                return;
+            }
+            
+            const question = questionInput.value.trim();
+            if (!question) return;
+            
+            questionCount++;
+            updateCounter();
+            
+            // Add user message
+            addMessage(question, true);
+            
+            // Add loading message
+            const loadingMessage = addMessage('', false, true);
+            
+            // Disable form
+            submitBtn.disabled = true;
+            questionInput.disabled = true;
+            
+            // Clear input
+            questionInput.value = '';
+            
+            // Show response after 2 seconds
+            setTimeout(() => {
+                const response = getResponse(questionCount);
+                loadingMessage.textContent = response;
+                
+                // Re-enable form if not at max questions
+                if (questionCount < maxQuestions) {
+                    submitBtn.disabled = false;
+                    questionInput.disabled = false;
+                    questionInput.focus();
+                } else {
+                    // Add final message
+                    setTimeout(() => {
+                        addMessage("Cảm ơn bạn đã sử dụng AI Assistant! Bạn đã hỏi đủ 10 câu rồi. 🎉", false);
+                    }, 1000);
+                }
+            }, 2000);
+        });
+
+        // Focus on input when page loads
+        questionInput.focus();
+        updateCounter();
+    </script>
+</body>
+</html>
