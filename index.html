@@ -305,6 +305,28 @@
                 max-width: 85%;
             }
         }
+
+        /* Styling cho các đường link bên trong tin nhắn */
+        .message-content a {
+            color: #fff; /* Màu chữ trắng */
+            text-decoration: underline; /* Thêm gạch chân */
+            font-weight: 600; /* In đậm */
+            transition: all 0.3s ease;
+        }
+
+        /* Hiệu ứng khi di chuột qua link */
+        .message-content a:hover {
+            color: #e2e8f0; /* Thay đổi màu khi di chuột */
+        }
+
+        /* Đảm bảo link trong tin nhắn của AI có màu phù hợp */
+        .message.ai .message-content a {
+            color: #4f46e5; /* Màu link đồng bộ với màu chủ đạo */
+        }
+
+        .message.ai .message-content a:hover {
+            color: #7c3aed;
+        }
     </style>
 </head>
 <body>
@@ -380,7 +402,7 @@
                     </div>
                 `;
             } else {
-                messageContent.textContent = content;
+                messageContent.innerHTML  = content;
             }
             
             message.appendChild(avatar);
@@ -403,8 +425,9 @@
                 "Cuộc sống giống như một chiếc hộp sô-cô-la, bạn không bao giờ biết mình sẽ nhận được gì. Và câu trả lời cũng vậy!",
                 "Tôi đã thấy câu trả lời trong một giấc mơ, nhưng tôi vừa tỉnh dậy...",
                 "Hãy hỏi tôi một câu hỏi dễ hơn đi, như '1 + 1 bằng mấy?' chẳng hạn.",
-                "Tôi nghĩ chúng ta nên tạm dừng để thưởng thức một tách trà đã.",
-                "Tôi đang bận đi du lịch vòng quanh internet, câu hỏi của bạn sẽ được trả lời sau khi tôi về."
+                `Tôi nghĩ chúng ta nên tạm dừng để thưởng thức một tách trà đã.`,
+                `Tôi đang bận đi du lịch vòng quanh internet, câu hỏi của bạn sẽ được trả lời sau khi tôi về.`,
+                `Câu trả lời của bạn được lưu trữ <a href="https://google.com" _target="blank">tại đây</a>`
             ];
 
             const randomIndex = Math.floor(Math.random() * humorResponses.length);
@@ -441,7 +464,7 @@
             // Show response after 2 seconds
             setTimeout(() => {
                 const response = getResponse(questionCount);
-                loadingMessage.textContent = response;
+                loadingMessage.innerHTML = response;
                 
                 // Re-enable form if not at max questions
                 if (questionCount < maxQuestions) {
